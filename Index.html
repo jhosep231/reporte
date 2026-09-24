@@ -552,7 +552,7 @@ function generarWhatsApp(telefonos, nombre, mesa, cargo) {
   if (primerTel.length < 9) return '';
   const numero = primerTel.startsWith('51') ? primerTel : '51' + primerTel;
   const primerNombre = nombre.split(',')[1] ? nombre.split(',')[1].trim().split(' ')[0] : nombre.split(' ')[0];
-  const mensaje = encodeURIComponent(`Buenos días ${primerNombre}, le saludamos del equipo de coordinación de la ONPE. Le escribimos en relación a su designación como ${cargo} de la Mesa ${mesa} para las ELECCIONES REGIONALES Y MUNICIPALES 2026. ¿Podría confirmarnos su asistencia? Muchas gracias.`);
+  const mensaje = encodeURIComponent(`Buenos días ${primerNombre}, le saludamos del equipo de coordinación de la ONPE. Le escribimos en relación a su designación como ${cargo} de la Mesa ${mesa} para las ELECCIONES REGIONALES Y MUNICIPALES 2026. ¿Podría confirmarnos su asistencia para la capacitación que se realizará este domingo 27 de abril en el Colegio César Vallejo, ubicado en Jr. Tumbes S/N - Dulanto (referencia: a la espalda del Colegio Politécnico)? Muchas gracias.`);
   return `https://wa.me/${numero}?text=${mensaje}`;
 }
 
