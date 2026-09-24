@@ -431,61 +431,76 @@ async function sincronizarConAPI() {
     if (!json.ok) throw new Error(json.error || 'Error desconocido');
 
     // ============================================================
-    // MAPEO DIRECTO: cada fila del Sheet = un registro
-    // El orden de filas del Sheet se respeta 1:1
+    // BUSCADOR DE COLUMNAS POR NOMBRE EXACTO
+    // (evita que "fecha" matchee con "fecha de capacitacion")
+    // ============================================================
+    const norm = s => String(s || '').toLowerCase().trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    function buscarColumna(fila, nombres) {
+      const keys = Object.keys(fila);
+      // Solo match EXACTO normalizado
+      for (const nombre of nombres) {
+        const target = norm(nombre);
+        for (const k of keys) {
+          if (norm(k) === target) return fila[k];
+        }
+      }
+      return '';
+    }
+
+    // ============================================================
+    // MAPEO 1:1 de cada fila del Sheet
     // ============================================================
     datosGlobales = json.data.map(fila => {
-      // Buscar valores por nombre de columna (case-insensitive)
-      const get = (posibles) => {
-        for (const key of Object.keys(fila)) {
-          const k = String(key).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          for (const p of posibles) {
-            const pn = p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            if (k === pn) return fila[key];
-          }
-        }
-        // Segundo intento: coincidencia parcial
-        for (const key of Object.keys(fila)) {
-          const k = String(key).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          for (const p of posibles) {
-            const pn = p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            if (k.includes(pn) || pn.includes(k)) return fila[key];
-          }
-        }
-        return '';
-      };
-
-      const mesa = get(['mesa']);
-      const cargo = get(['cargo']);
-      const nombre = get(['apellidos y nombres', 'apellidos', 'nombres']);
+      const mesa   = buscarColumna(fila, ['mesa']);
+      const cargo  = buscarColumna(fila, ['cargo']);
+      const nombre = buscarColumna(fila, ['apellidos y nombres']);
       if (!mesa || !nombre) return null;
 
-      // Fechas (una para credencial, una para capacitación)
-      const fechaCred = get(['fecha de credencial', 'fecha credencial', 'fecha cred']);
-      const fechaCap = get(['fecha de capacitacion', 'fecha capacitacion', 'fecha cap']);
+      const dni       = buscarColumna(fila, ['dni', 'documento']);
+      const direccion = buscarColumna(fila, ['direccion', 'dirección']);
+      const coords    = buscarColumna(fila, ['coordenadas', 'coordenada']);
+      // ⬇️ IMPORTANTE: aquí se distingue "fecha" de "fecha de capacitacion"
+      const fechaCred = buscarColumna(fila, ['fecha']);                                 // Col G
+      const telefonos = buscarColumna(fila, ['telefonos', 'teléfonos', 'teléfono']);     // Col H
+      const obs       = buscarColumna(fila, ['observacion']);                            // Col I
+      const fechaCap  = buscarColumna(fila, ['fecha de capacitacion', 'fecha de capacitación']); // Col J
+
+      // ============================================================
+      // VALIDACIONES
+      // ============================================================
+      const telLimpio      = String(telefonos || '').replace(/\D/g, '');
+      const tieneTelefono  = telLimpio.length >= 9;
+      const fechaCredNorm  = normalizarFecha(fechaCred);
+      const fechaCapNorm   = normalizarFecha(fechaCap);
+      const tieneFechaCred = !!fechaCredNorm;
+      const tieneFechaCap  = !!fechaCapNorm;
 
       return {
         Mesa: String(mesa).replace(/\.0$/, '').trim(),
         Cargo: String(cargo).trim(),
         'Apellidos y Nombres': String(nombre).trim(),
-        DNI: String(get(['dni', 'documento'])).replace(/\.0$/, '').trim(),
-        Dirección: String(get(['direccion', 'dirección'])).trim(),
-        coordenadas: String(get(['coordenadas'])).trim(),
-        fecha_cred: normalizarFecha(fechaCred),
-        fecha_capacitacion: normalizarFecha(fechaCap),
-        telefonos: String(get(['telefonos', 'teléfono', 'telefono'])).trim(),
-        observacion: String(get(['observacion'])).trim(),
-        obs_capacitacion: String(get(['observacion'])).trim(),
-        // Estados derivados SOLO de la existencia de fecha
-        cred_entregada: !!normalizarFecha(fechaCred),
-        cap_realizada: !!normalizarFecha(fechaCap)
+        DNI: String(dni).replace(/\.0$/, '').trim(),
+        Dirección: String(direccion).trim(),
+        coordenadas: String(coords).trim(),
+        fecha_cred: fechaCredNorm,
+        fecha_capacitacion: fechaCapNorm,
+        telefonos: String(telefonos).trim(),
+        observacion: String(obs).trim(),
+        obs_capacitacion: String(obs).trim(),
+
+        // ============================================================
+        // REGLAS DE ESTADO:
+        //   CRED ✅ = tiene TELÉFONO y FECHA (columna G)
+        //   CAP  ✅ = tiene FECHA DE CAPACITACIÓN (columna J)
+        // ============================================================
+        cred_entregada: tieneTelefono && tieneFechaCred,
+        cap_realizada:  tieneFechaCap
       };
     }).filter(Boolean);
 
-    // Ordenar respetando el orden del Sheet: por número de fila original
-    // (Ya viene en el orden del Sheet porque json.data respeta el orden de filas)
-
-    // Calcular coordinador y URLs útiles
+    // Asignar coordinador y URLs útiles
     datosGlobales.forEach(d => {
       d.Coordinador = 'Sin asignar';
       for (let c in COORDINADORES) {
@@ -509,19 +524,6 @@ async function sincronizarConAPI() {
     actualizarEstado('Sin conexión', 'offline');
     Swal.fire({ icon: 'error', title: 'No se pudo conectar al Sheet', text: err.message });
   }
-}
-
-function actualizarEstado(texto, tipo) {
-  const badge = document.getElementById('statusBadge');
-  if (!badge) return;
-  const dot = tipo === 'online' ? 'status-online' : 'status-offline';
-  badge.innerHTML = `<span class="status-dot ${dot}"></span> ${texto}`;
-}
-
-async function recargarDesdeSheets() {
-  Swal.fire({ title: 'Recargando desde Google Sheets...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-  await sincronizarConAPI();
-  Swal.close();
 }
 
 // ============================================================
