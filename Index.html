@@ -566,7 +566,9 @@ async function sincronizarConAPI() {
         // REGLAS:
         //   CRED ✅ = tiene TELÉFONO (>=9 dígitos) Y FECHA en columna "fecha"
         //   CAP  ✅ = tiene FECHA en columna "fecha de capacitacion"
-        cred_entregada: tieneTelefono && tieneFechaCred,
+        // CRED ✅ = tiene teléfono Y (tiene fecha cred O fecha capacitación)
+        // Razón: si fue capacitado, es porque ya recibió su credencial
+        cred_entregada: tieneTelefono && (tieneFechaCred || tieneFechaCap),
         cap_realizada:  tieneFechaCap
       };
     }).filter(Boolean);
@@ -1101,3 +1103,4 @@ function leerArchivo(file) {
 </script>
 </body>
 </html>
+
