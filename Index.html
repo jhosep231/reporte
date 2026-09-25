@@ -30,9 +30,7 @@
     .btn-icon.map:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
     .btn-icon.pdf:hover { color: var(--primary); border-color: var(--primary); background: #eef2ff; }
     .btn-icon.wa:hover { color: #25D366; border-color: #25D366; background: #f0fdf4; }
-    .btn-icon.edit:hover { color: var(--warning); border-color: var(--warning); background: #fffbeb; }
-    .badge-status { padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s; border: 1px solid transparent; }
-    .badge-status:active { transform: scale(0.95); }
+    .badge-status { padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: default; user-select: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid transparent; }
     .badge-ok { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
     .badge-pending { background: #fef3c7; color: #92400e; border-color: #fde68a; }
     .badge-coord { font-size: 0.75rem; font-weight: 600; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
@@ -47,8 +45,7 @@
     .matrix-table th, .matrix-table td { border: 1px solid #cbd5e1; padding: 4px 2px; vertical-align: middle; }
     .matrix-table thead th { background-color: #f8fafc; font-weight: 600; color: #334155; text-transform: uppercase; font-size: 0.6rem; }
     .matrix-table .mesa-col { font-weight: bold; background-color: #f1f5f9; text-align: center; }
-    .matrix-table .check-cell { width: 25px; height: 25px; cursor: pointer; transition: background 0.2s; }
-    .matrix-table .check-cell:hover { background-color: #e2e8f0; }
+    .matrix-table .check-cell { width: 25px; height: 25px; cursor: default; }
     .matrix-table .check-cell.checked::after { content: '✓'; font-size: 16px; font-weight: bold; color: #10b981; }
     .matrix-table .check-cell.checked-cap::after { content: '✓'; font-size: 16px; font-weight: bold; color: #4f46e5; }
     .header-onpe { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
@@ -108,7 +105,7 @@
 
 <div class="container-fluid px-4">
 
-  <!-- ZONA DE CARGA (oculta por defecto, se abre con el botón) -->
+  <!-- ZONA DE CARGA -->
   <div class="card p-3 mb-3 no-print" id="zonaCarga" style="display:none;">
     <div class="row g-2 align-items-center">
       <div class="col-md-8">
@@ -131,6 +128,7 @@
   </div>
 
   <div class="tab-content">
+
     <!-- TAB 1: DIRECTORIO -->
     <div class="tab-pane fade show active" id="directorio">
       <div class="card mb-3 p-3 filtros no-print">
@@ -171,7 +169,7 @@
           </div>
           <div class="col-12 col-md-2">
             <label class="form-label text-muted small fw-bold mb-1">Buscar</label>
-            <input type="text" id="busquedaGlobal" class="form-control form-control-sm" placeholder="Nombre o DNI..." onkeyup="tablaDT.search(this.value).draw()">
+            <input type="text" id="busquedaGlobal" class="form-control form-control-sm" placeholder="Nombre o DNI..." onkeyup="if(tablaDT)tablaDT.search(this.value).draw()">
           </div>
           <div class="col-12 col-md-2 d-flex gap-1">
             <button class="btn btn-primary btn-sm flex-fill" onclick="descargarPdfMesa()">📄 PDF Mesa</button>
@@ -243,98 +241,106 @@
       </div>
     </div>
 
-<!-- TAB 3: ANALISIS -->
-<div class="tab-pane fade" id="analisis">
-  <!-- KPIs superiores -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card border-start border-4 border-primary">
-        <div class="kpi-title text-primary">Total Miembros</div>
-        <div class="kpi-value" id="totalRegistros">0</div>
-        <div class="kpi-sub text-muted small" id="totalMesas">0 Mesas</div>
+    <!-- TAB 3: ANALISIS -->
+    <div class="tab-pane fade" id="analisis">
+      <!-- KPIs superiores -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="card kpi-card border-start border-4 border-primary">
+            <div class="kpi-title text-primary">Total Miembros</div>
+            <div class="kpi-value" id="totalRegistros">0</div>
+            <div class="kpi-sub text-muted small" id="totalMesas">0 Mesas</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card kpi-card border-start border-4 border-success">
+            <div class="kpi-title text-success">Credenciales</div>
+            <div class="kpi-value" id="totalCred">0</div>
+            <div class="kpi-sub text-muted small" id="pctCred">0% avance</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card kpi-card border-start border-4 border-info">
+            <div class="kpi-title text-info">Capacitaciones</div>
+            <div class="kpi-value" id="totalCap">0</div>
+            <div class="kpi-sub text-muted small" id="pctCap">0% avance</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card kpi-card border-start border-4 border-warning">
+            <div class="kpi-title text-warning">Contactabilidad</div>
+            <div class="kpi-value" id="porcentajeProgreso">0%</div>
+            <div class="kpi-sub text-muted small">Tel. y Dirección</div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card border-start border-4 border-success">
-        <div class="kpi-title text-success">Credenciales</div>
-        <div class="kpi-value" id="totalCred">0</div>
-        <div class="kpi-sub text-muted small" id="pctCred">0% avance</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card border-start border-4 border-info">
-        <div class="kpi-title text-info">Capacitaciones</div>
-        <div class="kpi-value" id="totalCap">0</div>
-        <div class="kpi-sub text-muted small" id="pctCap">0% avance</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card border-start border-4 border-warning">
-        <div class="kpi-title text-warning">Contactabilidad</div>
-        <div class="kpi-value" id="porcentajeProgreso">0%</div>
-        <div class="kpi-sub text-muted small">Tel. y Dirección</div>
-      </div>
-    </div>
-  </div>
 
-  <!-- TABLA 1: CREDENCIALES POR MESA -->
-  <div class="card p-4 mb-4">
-    <h6 class="fw-bold mb-3 text-center text-uppercase">📋 Avance de credenciales por mesa</h6>
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm text-center align-middle" style="font-size: 0.85rem; margin-bottom: 0;">
-        <thead class="table-light">
-          <tr>
-            <th style="width: 90px;">Mesa</th>
-            <th>Nombre</th>
-            <th style="width: 110px;">Entregadas</th>
-            <th style="width: 120px;">Falta entregar</th>
-            <th style="width: 110px;">Porcentaje</th>
-            <th style="width: 50px;"></th>
-          </tr>
-        </thead>
-        <tbody id="tablaCredXmesaBody"></tbody>
-        <tfoot id="tablaCredXmesaFoot" class="fw-bold"></tfoot>
-      </table>
-    </div>
-  </div>
-
-  <!-- TABLA 2: CAPACITADOS POR MESA -->
-  <div class="card p-4 mb-4">
-    <h6 class="fw-bold mb-3 text-center text-uppercase">📋 Avance de miembros de mesas capacitados</h6>
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm text-center align-middle" style="font-size: 0.85rem; margin-bottom: 0;">
-        <thead class="table-light">
-          <tr>
-            <th style="width: 90px;">Mesa</th>
-            <th>Nombre</th>
-            <th style="width: 110px;">Capacitados</th>
-            <th style="width: 120px;">Falta capacitar</th>
-            <th style="width: 110px;">Porcentaje</th>
-            <th style="width: 50px;"></th>
-          </tr>
-        </thead>
-        <tbody id="tablaCapXmesaBody"></tbody>
-        <tfoot id="tablaCapXmesaFoot" class="fw-bold"></tfoot>
-      </table>
-    </div>
-  </div>
-
-  <!-- GRÁFICOS -->
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="card p-4 h-100">
-        <h6 class="fw-bold mb-3">📊 Avance por Coordinador</h6>
-        <canvas id="graficoCoordinador" style="max-height: 300px;"></canvas>
+      <!-- TABLA 1: CREDENCIALES POR MESA -->
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3 text-center text-uppercase">📋 Avance de credenciales por mesa</h6>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm text-center align-middle" style="font-size: 0.85rem; margin-bottom: 0;">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 90px;">Mesa</th>
+                <th>Nombre</th>
+                <th style="width: 110px;">Entregadas</th>
+                <th style="width: 120px;">Falta entregar</th>
+                <th style="width: 110px;">Porcentaje</th>
+                <th style="width: 50px;"></th>
+              </tr>
+            </thead>
+            <tbody id="tablaCredXmesaBody"></tbody>
+            <tfoot id="tablaCredXmesaFoot" class="fw-bold"></tfoot>
+          </table>
+        </div>
       </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card p-4 h-100">
-        <h6 class="fw-bold mb-3">🍩 Distribución General</h6>
-        <canvas id="graficoEstado" style="max-height: 300px;"></canvas>
+
+      <!-- TABLA 2: CAPACITADOS POR MESA -->
+      <div class="card p-4 mb-4">
+        <h6 class="fw-bold mb-3 text-center text-uppercase">📋 Avance de miembros de mesas capacitados</h6>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm text-center align-middle" style="font-size: 0.85rem; margin-bottom: 0;">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 90px;">Mesa</th>
+                <th>Nombre</th>
+                <th style="width: 110px;">Capacitados</th>
+                <th style="width: 120px;">Falta capacitar</th>
+                <th style="width: 110px;">Porcentaje</th>
+                <th style="width: 50px;"></th>
+              </tr>
+            </thead>
+            <tbody id="tablaCapXmesaBody"></tbody>
+            <tfoot id="tablaCapXmesaFoot" class="fw-bold"></tfoot>
+          </table>
+        </div>
       </div>
+
+      <!-- GRÁFICOS -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card p-4 h-100">
+            <h6 class="fw-bold mb-3">📊 Avance por Coordinador</h6>
+            <canvas id="graficoCoordinador" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card p-4 h-100">
+            <h6 class="fw-bold mb-3">🍩 Distribución General</h6>
+            <canvas id="graficoEstado" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+      </div>
+
     </div>
+    <!-- fin tab-pane analisis -->
+
   </div>
+  <!-- fin tab-content -->
+
 </div>
+<!-- fin container-fluid -->
 
 <!-- MODAL DE EDICIÓN -->
 <div class="modal fade" id="modalEdicion" tabindex="-1" data-bs-backdrop="static">
@@ -409,6 +415,57 @@ let chartCoord = null, chartEstado = null;
 let MESAS_ORDEN = [];
 
 // ============================================================
+// HELPERS GLOBALES (declarados primero para evitar "no definido")
+// ============================================================
+function actualizarEstado(texto, tipo) {
+  const badge = document.getElementById('statusBadge');
+  if (!badge) return;
+  const dot = tipo === 'online' ? 'status-online' : 'status-offline';
+  badge.innerHTML = `<span class="status-dot ${dot}"></span> ${texto}`;
+}
+
+async function recargarDesdeSheets() {
+  Swal.fire({ title: 'Recargando desde Google Sheets...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  await sincronizarConAPI();
+  Swal.close();
+}
+
+function abrirCargaExcel() {
+  const z = document.getElementById('zonaCarga');
+  if (!z) return;
+  z.style.display = z.style.display === 'none' ? 'block' : 'none';
+}
+
+function restaurarDemo() {
+  Swal.fire({
+    title: '¿Borrar todos los datos locales?',
+    text: 'Se eliminarán los datos del navegador. Al recargar se volverán a traer del Sheet.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Sí, borrar',
+    cancelButtonText: 'Cancelar'
+  }).then(r => {
+    if (r.isConfirmed) {
+      localStorage.removeItem('onpe_datos_mesas_v7_api');
+      datosGlobales = [];
+      MESAS_ORDEN = [];
+      postCarga();
+      Swal.fire('Borrado', 'Usa "Recargar Sheets".', 'success');
+    }
+  });
+}
+
+function exportarTodoJSON() {
+  const blob = new Blob([JSON.stringify(datosGlobales, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `onpe_datos_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+// ============================================================
 // INICIALIZACIÓN
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
@@ -417,6 +474,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('ana-tab').addEventListener('shown.bs.tab', () => {
     calcularAnalisis();
   });
+
+  // Fallback: si después de 8 segundos no hay datos, avisar
+  setTimeout(() => {
+    if (datosGlobales.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin datos cargados',
+        html: 'No se pudieron leer los datos del Sheet.<br>Abre la consola (F12) para más detalles.',
+        confirmButtonText: 'Reintentar'
+      }).then(() => recargarDesdeSheets());
+    }
+  }, 8000);
 });
 
 // ============================================================
@@ -430,62 +499,61 @@ async function sincronizarConAPI() {
     const json = await resp.json();
     if (!json.ok) throw new Error(json.error || 'Error desconocido');
 
-    // ============================================================
-    // MAPEO DIRECTO: cada fila del Sheet = un registro
-    // El orden de filas del Sheet se respeta 1:1
-    // ============================================================
-    datosGlobales = json.data.map(fila => {
-      // Buscar valores por nombre de columna (case-insensitive)
-      const get = (posibles) => {
-        for (const key of Object.keys(fila)) {
-          const k = String(key).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          for (const p of posibles) {
-            const pn = p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            if (k === pn) return fila[key];
-          }
-        }
-        // Segundo intento: coincidencia parcial
-        for (const key of Object.keys(fila)) {
-          const k = String(key).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          for (const p of posibles) {
-            const pn = p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            if (k.includes(pn) || pn.includes(k)) return fila[key];
-          }
-        }
-        return '';
-      };
+    const norm = s => String(s || '').toLowerCase().trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-      const mesa = get(['mesa']);
-      const cargo = get(['cargo']);
-      const nombre = get(['apellidos y nombres', 'apellidos', 'nombres']);
+    function buscarColumna(fila, nombres) {
+      const keys = Object.keys(fila);
+      for (const nombre of nombres) {
+        const target = norm(nombre);
+        for (const k of keys) {
+          if (norm(k) === target) return fila[k];
+        }
+      }
+      return '';
+    }
+
+    datosGlobales = json.data.map(fila => {
+      const mesa   = buscarColumna(fila, ['mesa']);
+      const cargo  = buscarColumna(fila, ['cargo']);
+      const nombre = buscarColumna(fila, ['apellidos y nombres']);
       if (!mesa || !nombre) return null;
 
-      // Fechas (una para credencial, una para capacitación)
-      const fechaCred = get(['fecha de credencial', 'fecha credencial', 'fecha cred']);
-      const fechaCap = get(['fecha de capacitacion', 'fecha capacitacion', 'fecha cap']);
+      const dni       = buscarColumna(fila, ['dni', 'documento']);
+      const direccion = buscarColumna(fila, ['direccion', 'dirección']);
+      const coords    = buscarColumna(fila, ['coordenadas', 'coordenada']);
+      const fechaCred = buscarColumna(fila, ['fecha']);
+      const telefonos = buscarColumna(fila, ['telefonos', 'teléfonos', 'teléfono']);
+      const obs       = buscarColumna(fila, ['observacion']);
+      const fechaCap  = buscarColumna(fila, ['fecha de capacitacion', 'fecha de capacitación']);
+
+      const telLimpio      = String(telefonos || '').replace(/\D/g, '');
+      const tieneTelefono  = telLimpio.length >= 9;
+      const fechaCredNorm  = normalizarFecha(fechaCred);
+      const fechaCapNorm   = normalizarFecha(fechaCap);
+      const tieneFechaCred = !!fechaCredNorm;
+      const tieneFechaCap  = !!fechaCapNorm;
 
       return {
         Mesa: String(mesa).replace(/\.0$/, '').trim(),
         Cargo: String(cargo).trim(),
         'Apellidos y Nombres': String(nombre).trim(),
-        DNI: String(get(['dni', 'documento'])).replace(/\.0$/, '').trim(),
-        Dirección: String(get(['direccion', 'dirección'])).trim(),
-        coordenadas: String(get(['coordenadas'])).trim(),
-        fecha_cred: normalizarFecha(fechaCred),
-        fecha_capacitacion: normalizarFecha(fechaCap),
-        telefonos: String(get(['telefonos', 'teléfono', 'telefono'])).trim(),
-        observacion: String(get(['observacion'])).trim(),
-        obs_capacitacion: String(get(['observacion'])).trim(),
-        // Estados derivados SOLO de la existencia de fecha
-        cred_entregada: !!normalizarFecha(fechaCred),
-        cap_realizada: !!normalizarFecha(fechaCap)
+        DNI: String(dni).replace(/\.0$/, '').trim(),
+        Dirección: String(direccion).trim(),
+        coordenadas: String(coords).trim(),
+        fecha_cred: fechaCredNorm,
+        fecha_capacitacion: fechaCapNorm,
+        telefonos: String(telefonos).trim(),
+        observacion: String(obs).trim(),
+        obs_capacitacion: String(obs).trim(),
+        // Reglas:
+        //   CRED ✅ = tiene TELÉFONO (>=9 dígitos) Y FECHA en col G
+        //   CAP  ✅ = tiene FECHA en col J
+        cred_entregada: tieneTelefono && tieneFechaCred,
+        cap_realizada:  tieneFechaCap
       };
     }).filter(Boolean);
 
-    // Ordenar respetando el orden del Sheet: por número de fila original
-    // (Ya viene en el orden del Sheet porque json.data respeta el orden de filas)
-
-    // Calcular coordinador y URLs útiles
     datosGlobales.forEach(d => {
       d.Coordinador = 'Sin asignar';
       for (let c in COORDINADORES) {
@@ -509,19 +577,6 @@ async function sincronizarConAPI() {
     actualizarEstado('Sin conexión', 'offline');
     Swal.fire({ icon: 'error', title: 'No se pudo conectar al Sheet', text: err.message });
   }
-}
-
-function actualizarEstado(texto, tipo) {
-  const badge = document.getElementById('statusBadge');
-  if (!badge) return;
-  const dot = tipo === 'online' ? 'status-online' : 'status-offline';
-  badge.innerHTML = `<span class="status-dot ${dot}"></span> ${texto}`;
-}
-
-async function recargarDesdeSheets() {
-  Swal.fire({ title: 'Recargando desde Google Sheets...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-  await sincronizarConAPI();
-  Swal.close();
 }
 
 // ============================================================
@@ -552,7 +607,7 @@ function generarWhatsApp(telefonos, nombre, mesa, cargo) {
   if (primerTel.length < 9) return '';
   const numero = primerTel.startsWith('51') ? primerTel : '51' + primerTel;
   const primerNombre = nombre.split(',')[1] ? nombre.split(',')[1].trim().split(' ')[0] : nombre.split(' ')[0];
-  const mensaje = encodeURIComponent(`Buenos días ${primerNombre}, le saludamos del equipo de coordinación de la ONPE. Le escribimos en relación a su designación como ${cargo} de la Mesa ${mesa} para las ELECCIONES REGIONALES Y MUNICIPALES 2026. ¿Podría confirmarnos su asistencia? Muchas gracias.`);
+  const mensaje = encodeURIComponent(`Buenos días ${primerNombre}, le saludamos del equipo de coordinación de la ONPE. Le escribimos en relación a su designación como ${cargo} de la Mesa ${mesa} para las ELECCIONES REGIONALES Y MUNICIPALES 2026. ¿Podría confirmarnos su asistencia para la capacitación que se realizará este domingo 27 de setiembre en el Colegio César Vallejo, ubicado en Jr. Tumbes S/N - Dulanto (referencia: a la espalda del Colegio Politécnico)? Muchas gracias.`);
   return `https://wa.me/${numero}?text=${mensaje}`;
 }
 
@@ -574,7 +629,7 @@ function actualizarFiltroMeses() {
 }
 
 // ============================================================
-// DATATABLE (solo visualización, sin edición)
+// DATATABLE
 // ============================================================
 function renderizarTabla() {
   if (tablaDT) {
@@ -584,10 +639,10 @@ function renderizarTabla() {
   tablaDT = $('#tablaDirectorio').DataTable({
     data: datosGlobales,
     columns: [
-      { data: 'Mesa', className: 'text-center', render: (data) => `<span class="mesa-badge">${data}</span>` },
+      { data: 'Mesa', className: 'text-center' },
       { data: 'Cargo', className: 'fw-medium text-dark' },
       { data: 'Apellidos y Nombres', render: (data) => `<span class="fw-bold text-dark">${data}</span>` },
-      { data: 'DNI', className: 'text-center dni-cell' },
+      { data: 'DNI', className: 'text-center' },
       { data: 'Coordinador', className: 'text-center', render: (data) => {
           const badge = data === 'Gabriela' ? 'bg-gabriela' : data === 'Ricardo' ? 'bg-ricardo' : 'bg-ariana';
           const icon = COORDINADORES[data]?.icono || '';
@@ -596,14 +651,13 @@ function renderizarTabla() {
       { data: 'telefonos', className: 'text-muted small', render: (data) => data || '<em class="text-danger">Sin teléfono</em>' },
       { data: 'Dirección', className: 'text-muted small' },
       { data: 'cred_entregada', className: 'text-center', render: (data, type, row) => {
-          // Solo lectura: se marca ✅ si hay fecha_cred
-          return data 
-            ? `<span class="badge-status badge-ok" title="Entregada: ${row.fecha_cred || ''}">✅</span>` 
-            : `<span class="badge-status badge-pending" title="Sin fecha de entrega">❌</span>`;
+          return data
+            ? `<span class="badge-status badge-ok" title="Entregada: ${row.fecha_cred || ''}">✅</span>`
+            : `<span class="badge-status badge-pending" title="Sin teléfono o sin fecha de entrega">❌</span>`;
       }},
       { data: 'cap_realizada', className: 'text-center', render: (data, type, row) => {
-          return data 
-            ? `<span class="badge-status badge-ok" title="Capacitado: ${row.fecha_capacitacion || ''}">✅</span>` 
+          return data
+            ? `<span class="badge-status badge-ok" title="Capacitado: ${row.fecha_capacitacion || ''}">✅</span>`
             : `<span class="badge-status badge-pending" title="Sin fecha de capacitación">❌</span>`;
       }},
       { data: null, className: 'text-center', orderable: false, render: (data, type, row) => {
@@ -622,7 +676,6 @@ function renderizarTabla() {
       { extend: 'excel', text: '📊 Excel', className: 'btn btn-sm btn-outline-success' },
       { extend: 'csv', text: '📃 CSV', className: 'btn btn-sm btn-outline-secondary' }
     ],
-    // ⚠️ ORDEN: respeta el orden del Sheet (sin order inicial)
     order: [],
     language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }
   });
@@ -636,7 +689,6 @@ function renderizarMatriz() {
   const tbody = document.getElementById('matrizBody');
   const tfoot = document.getElementById('matrizFoot');
 
-  // Encabezado: 9 cargos × 2 columnas (CRED | CAP)
   let headHtml = `<tr>
     <th rowspan="2" style="width: 30px;">N°</th>
     <th rowspan="2" style="width: 70px;">MESA N°</th>`;
@@ -646,7 +698,6 @@ function renderizarMatriz() {
   headHtml += `</tr>`;
   thead.innerHTML = headHtml;
 
-  // Cuerpo: una fila por mesa
   let bodyHtml = '';
   MESAS_ORDEN.forEach((mesa, index) => {
     bodyHtml += `<tr>
@@ -658,7 +709,6 @@ function renderizarMatriz() {
       if (p) {
         const credClass = p.cred_entregada ? 'checked' : '';
         const capClass = p.cap_realizada ? 'checked-cap' : '';
-        // Solo visualización: sin onclick
         bodyHtml += `
           <td class="check-cell ${credClass}" title="CRED: ${p['Apellidos y Nombres']}${p.fecha_cred ? ' — ' + p.fecha_cred : ''}"></td>
           <td class="check-cell ${capClass}" title="CAP: ${p['Apellidos y Nombres']}${p.fecha_capacitacion ? ' — ' + p.fecha_capacitacion : ''}"></td>`;
@@ -667,7 +717,6 @@ function renderizarMatriz() {
       }
     });
 
-    // Observaciones: concatenar las observaciones de los 9 miembros de esa mesa
     const mesaMiembros = datosGlobales.filter(d => d.Mesa === mesa);
     const obs = mesaMiembros.map(m => m.observacion).filter(Boolean).join(' | ');
     bodyHtml += `<td class="text-start" style="font-size:0.6rem; max-width:150px;">${escpar(obs).substring(0, 80)}${obs.length > 80 ? '…' : ''}</td>`;
@@ -675,7 +724,6 @@ function renderizarMatriz() {
   });
   tbody.innerHTML = bodyHtml;
 
-  // Totales por cargo
   let footHtml = `<tr class="fw-bold bg-light"><td colspan="2">TOTALES</td>`;
   CARGOS_ORDEN.forEach(cargo => {
     const credCount = datosGlobales.filter(d => d.Cargo === cargo && d.cred_entregada).length;
@@ -722,7 +770,6 @@ function calcularAnalisis() {
   const pctCap = total > 0 ? ((totalCap / total) * 100).toFixed(1) : 0;
   const pctContacto = total > 0 ? ((contactables / total) * 100).toFixed(1) : 0;
 
-  // KPIs
   document.getElementById('totalRegistros').innerText = total;
   document.getElementById('totalMesas').innerText = MESAS_ORDEN.length + ' Mesas';
   document.getElementById('totalCred').innerText = totalCred;
@@ -731,18 +778,9 @@ function calcularAnalisis() {
   document.getElementById('pctCap').innerText = pctCap + '% avance';
   document.getElementById('porcentajeProgreso').innerText = pctContacto + '%';
 
-  // ============================================================
-  // TABLA 1: Avance de credenciales por mesa
-  // ============================================================
-  renderTablaPorMesa('tablaCredXmesaBody', 'tablaCredXmesaFoot', 'cred_entregada', 'entregadas', 'falta entregar', 'total de credenciales');
-  // ============================================================
-  // TABLA 2: Avance de capacitados por mesa
-  // ============================================================
-  renderTablaPorMesa('tablaCapXmesaBody', 'tablaCapXmesaFoot', 'cap_realizada', 'capacitados', 'falta capacitar', 'total por capacitar');
+  renderTablaPorMesa('tablaCredXmesaBody', 'tablaCredXmesaFoot', 'cred_entregada', 'total de credenciales');
+  renderTablaPorMesa('tablaCapXmesaBody', 'tablaCapXmesaFoot', 'cap_realizada', 'total por capacitar');
 
-  // ============================================================
-  // GRÁFICOS (existentes)
-  // ============================================================
   const coords = ['Gabriela', 'Ricardo', 'Ariana'];
   const credCoord = coords.map(c => datosGlobales.filter(d => d.Coordinador === c && d.cred_entregada).length);
   const capCoord = coords.map(c => datosGlobales.filter(d => d.Coordinador === c && d.cap_realizada).length);
@@ -774,24 +812,20 @@ function calcularAnalisis() {
 }
 
 // ============================================================
-// HELPERS PARA LAS TABLAS POR MESA
+// HELPERS TABLAS POR MESA
 // ============================================================
-
-// Obtiene el "nombre" del responsable de la mesa (Presidente por defecto)
 function obtenerNombreMesa(mesa) {
   const miembro = datosGlobales.find(d => d.Mesa === mesa);
   return miembro ? (miembro.Coordinador || '---') : '---';
 }
 
-// Calcula el semáforo según el porcentaje
 function colorSemaforo(pct) {
-  if (pct >= 90) return { color: '#10b981', texto: '🟢' };
-  if (pct >= 50) return { color: '#f59e0b', texto: '🟡' };
-  return { color: '#ef4444', texto: '🔴' };
+  if (pct >= 90) return { color: '#10b981' };
+  if (pct >= 50) return { color: '#f59e0b' };
+  return { color: '#ef4444' };
 }
 
-// Renderiza una tabla por mesa (cred o cap)
-function renderTablaPorMesa(tbodyId, tfootId, campo, labelOk, labelFalta, labelTotal) {
+function renderTablaPorMesa(tbodyId, tfootId, campo, labelTotal) {
   const tbody = document.getElementById(tbodyId);
   const tfoot = document.getElementById(tfootId);
   if (!tbody || !tfoot) return;
@@ -816,14 +850,11 @@ function renderTablaPorMesa(tbodyId, tfootId, campo, labelOk, labelFalta, labelT
       <td class="fw-bold">${ok}</td>
       <td class="text-danger fw-bold">${falta}</td>
       <td class="fw-bold">${pct}%</td>
-      <td>
-        <span style="display:inline-block; width:18px; height:18px; border-radius:50%; background:${sem.color};"></span>
-      </td>
+      <td><span style="display:inline-block; width:18px; height:18px; border-radius:50%; background:${sem.color};"></span></td>
     </tr>`;
   });
 
   const totalMiembros = totalOk + totalFalta;
-  const pctTotal = totalMiembros > 0 ? Math.round((totalOk / totalMiembros) * 100) : 0;
 
   tfoot.innerHTML = `
     <tr class="table-light">
@@ -843,6 +874,7 @@ function renderTablaPorMesa(tbodyId, tfootId, campo, labelOk, labelFalta, labelT
 // FILTROS
 // ============================================================
 function filtrarTabla() {
+  if (!tablaDT) return;
   const coord = document.getElementById('filtroCoordinador').value;
   const mesa = document.getElementById('filtroMesa').value;
   const cargo = document.getElementById('filtroCargo').value;
@@ -864,7 +896,7 @@ function filtrarTabla() {
 }
 
 // ============================================================
-// PDFs (jsPDF + html2canvas)
+// PDFs
 // ============================================================
 function escpar(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1010,6 +1042,42 @@ async function descargarPdfMesa() {
     Swal.fire('Error', err.message, 'error');
   }
 }
+
+// ============================================================
+// CARGA MANUAL DE EXCEL (opcional)
+// ============================================================
+function configurarDragAndDrop() {
+  const dz = document.getElementById('dropZone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if (e.dataTransfer.files.length) leerArchivo(e.dataTransfer.files[0]);
+  });
+}
+
+function leerArchivo(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const primeraHoja = workbook.Sheets[workbook.SheetNames[0]];
+      const filas = XLSX.utils.sheet_to_json(primeraHoja, { defval: '', raw: false });
+      if (!filas.length) throw new Error('El archivo está vacío.');
+      alert('Carga manual no implementada en esta versión. Usa "Recargar Sheets".');
+    } catch (err) {
+      Swal.fire('Error al leer el archivo', err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Activar drag&drop cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', configurarDragAndDrop);
 </script>
 </body>
 </html>
