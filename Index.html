@@ -334,7 +334,9 @@
       </div>
     </div>
   </div>
-</div>
+</div>   ← cierra tab-pane analisis
+</div>   ← cierra tab-content          ⬅️ FALTABA
+</div>   ← cierra container-fluid      ⬅️ FALTABA
 
 <!-- MODAL DE EDICIÓN -->
 <div class="modal fade" id="modalEdicion" tabindex="-1" data-bs-backdrop="static">
@@ -1012,6 +1014,19 @@ async function descargarPdfMesa() {
     Swal.fire('Error', err.message, 'error');
   }
 }
+// Fallback: si después de 6 segundos no hay datos, mostrar aviso
+setTimeout(() => {
+  if (datosGlobales.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Sin datos cargados',
+      html: `No se pudieron leer los datos del Sheet.<br>
+             Verifica la consola (F12) para más detalles.`,
+      confirmButtonText: 'Reintentar',
+    }).then(() => recargarDesdeSheets());
+  }
+}, 6000);
 </script>
 </body>
 </html>
+
