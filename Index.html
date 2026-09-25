@@ -415,7 +415,7 @@ let chartCoord = null, chartEstado = null;
 let MESAS_ORDEN = [];
 
 // ============================================================
-// HELPERS GLOBALES (declarados primero para evitar "no definido")
+// HELPERS GLOBALES (declarados primero)
 // ============================================================
 function actualizarEstado(texto, tipo) {
   const badge = document.getElementById('statusBadge');
@@ -469,6 +469,7 @@ function exportarTodoJSON() {
 // INICIALIZACIÓN
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  configurarDragAndDrop();
   await sincronizarConAPI();
 
   document.getElementById('ana-tab').addEventListener('shown.bs.tab', () => {
@@ -499,34 +500,49 @@ async function sincronizarConAPI() {
     const json = await resp.json();
     if (!json.ok) throw new Error(json.error || 'Error desconocido');
 
+    // Log de diagnóstico: columnas que devuelve el Sheet
+    if (json.data && json.data.length > 0) {
+      console.log('📋 Columnas detectadas en el Sheet:', Object.keys(json.data[0]));
+    }
+
+    // Normalizador: quita tildes, mayúsculas y espacios
     const norm = s => String(s || '').toLowerCase().trim()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    function buscarColumna(fila, nombres) {
-      const keys = Object.keys(fila);
+    // Buscador SOLO por coincidencia EXACTA (normalizada)
+    // Esto evita que "fecha" haga match con "fecha de capacitacion"
+    function buscarExacto(fila, ...nombres) {
       for (const nombre of nombres) {
         const target = norm(nombre);
-        for (const k of keys) {
+        for (const k of Object.keys(fila)) {
           if (norm(k) === target) return fila[k];
         }
       }
       return '';
     }
 
+    // ============================================================
+    // MAPEO 1:1 de cada fila del Sheet
+    // ============================================================
     datosGlobales = json.data.map(fila => {
-      const mesa   = buscarColumna(fila, ['mesa']);
-      const cargo  = buscarColumna(fila, ['cargo']);
-      const nombre = buscarColumna(fila, ['apellidos y nombres']);
+      const mesa   = buscarExacto(fila, 'mesa');
+      const cargo  = buscarExacto(fila, 'cargo');
+      const nombre = buscarExacto(fila, 'apellidos y nombres', 'apellidos y nombre', 'nombres', 'nombre');
       if (!mesa || !nombre) return null;
 
-      const dni       = buscarColumna(fila, ['dni', 'documento']);
-      const direccion = buscarColumna(fila, ['direccion', 'dirección']);
-      const coords    = buscarColumna(fila, ['coordenadas', 'coordenada']);
-      const fechaCred = buscarColumna(fila, ['fecha']);
-      const telefonos = buscarColumna(fila, ['telefonos', 'teléfonos', 'teléfono']);
-      const obs       = buscarColumna(fila, ['observacion']);
-      const fechaCap  = buscarColumna(fila, ['fecha de capacitacion', 'fecha de capacitación']);
+      const dni       = buscarExacto(fila, 'dni', 'documento');
+      const direccion = buscarExacto(fila, 'dirección', 'direccion');
+      const coords    = buscarExacto(fila, 'coordenadas', 'coordenada');
+      const telefonos = buscarExacto(fila, 'telefonos', 'teléfonos', 'teléfono', 'telefono');
+      const obs       = buscarExacto(fila, 'observacion', 'observación');
 
+      // ⬇️ DISTINCIÓN CLAVE:
+      // Columna G: "fecha" → fecha de entrega de credencial
+      // Columna J: "fecha de capacitacion" → fecha de capacitación
+      const fechaCred = buscarExacto(fila, 'fecha', 'fecha credencial', 'fecha de credencial');
+      const fechaCap  = buscarExacto(fila, 'fecha de capacitacion', 'fecha de capacitación', 'fecha capacitacion');
+
+      // Validaciones
       const telLimpio      = String(telefonos || '').replace(/\D/g, '');
       const tieneTelefono  = telLimpio.length >= 9;
       const fechaCredNorm  = normalizarFecha(fechaCred);
@@ -546,14 +562,16 @@ async function sincronizarConAPI() {
         telefonos: String(telefonos).trim(),
         observacion: String(obs).trim(),
         obs_capacitacion: String(obs).trim(),
-        // Reglas:
-        //   CRED ✅ = tiene TELÉFONO (>=9 dígitos) Y FECHA en col G
-        //   CAP  ✅ = tiene FECHA en col J
+
+        // REGLAS:
+        //   CRED ✅ = tiene TELÉFONO (>=9 dígitos) Y FECHA en columna "fecha"
+        //   CAP  ✅ = tiene FECHA en columna "fecha de capacitacion"
         cred_entregada: tieneTelefono && tieneFechaCred,
         cap_realizada:  tieneFechaCap
       };
     }).filter(Boolean);
 
+    // Asignar coordinador y URLs útiles
     datosGlobales.forEach(d => {
       d.Coordinador = 'Sin asignar';
       for (let c in COORDINADORES) {
@@ -565,6 +583,11 @@ async function sincronizarConAPI() {
 
     MESAS_ORDEN = [...new Set(datosGlobales.map(d => d.Mesa))]
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+    // Log de control
+    const nCred = datosGlobales.filter(d => d.cred_entregada).length;
+    const nCap  = datosGlobales.filter(d => d.cap_realizada).length;
+    console.log(`✅ ${datosGlobales.length} registros · CRED: ${nCred} · CAP: ${nCap}`);
 
     postCarga();
     actualizarEstado(`En línea · ${datosGlobales.length} registros`, 'online');
@@ -1068,16 +1091,13 @@ function leerArchivo(file) {
       const primeraHoja = workbook.Sheets[workbook.SheetNames[0]];
       const filas = XLSX.utils.sheet_to_json(primeraHoja, { defval: '', raw: false });
       if (!filas.length) throw new Error('El archivo está vacío.');
-      alert('Carga manual no implementada en esta versión. Usa "Recargar Sheets".');
+      Swal.fire('Info', 'Carga manual no implementada en esta versión. Usa "Recargar Sheets".', 'info');
     } catch (err) {
       Swal.fire('Error al leer el archivo', err.message, 'error');
     }
   };
   reader.readAsArrayBuffer(file);
 }
-
-// Activar drag&drop cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', configurarDragAndDrop);
 </script>
 </body>
 </html>
