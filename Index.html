@@ -394,6 +394,56 @@
 
 <script>
 // ============================================================
+// HELPERS GLOBALES (definidos primero para evitar "no definido")
+// ============================================================
+function actualizarEstado(texto, tipo) {
+  const badge = document.getElementById('statusBadge');
+  if (!badge) return;
+  const dot = tipo === 'online' ? 'status-online' : 'status-offline';
+  badge.innerHTML = `<span class="status-dot ${dot}"></span> ${texto}`;
+}
+
+async function recargarDesdeSheets() {
+  Swal.fire({ title: 'Recargando desde Google Sheets...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  await sincronizarConAPI();
+  Swal.close();
+}
+
+function abrirCargaExcel() {
+  const z = document.getElementById('zonaCarga');
+  if (!z) return;
+  z.style.display = z.style.display === 'none' ? 'block' : 'none';
+}
+
+function restaurarDemo() {
+  Swal.fire({
+    title: '¿Borrar todos los datos locales?',
+    text: 'Se eliminarán los datos del navegador. Al recargar se volverán a traer del Sheet.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Sí, borrar',
+    cancelButtonText: 'Cancelar'
+  }).then(r => {
+    if (r.isConfirmed) {
+      localStorage.removeItem('onpe_datos_mesas_v7_api');
+      datosGlobales = [];
+      MESAS_ORDEN = [];
+      postCarga();
+      Swal.fire('Borrado', 'Usa "Recargar Sheets".', 'success');
+    }
+  });
+}
+
+function exportarTodoJSON() {
+  const blob = new Blob([JSON.stringify(datosGlobales, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `onpe_datos_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+// ============================================================
 // CONFIGURACIÓN
 // ============================================================
 const API_URL = 'https://script.google.com/macros/s/AKfycbwMLfV296O_kYDHLnQO8wOFRL73ZfwfuL5D5OhGxCGQHVTS-6dllEcqkNKSJeNrZeP4/exec';
@@ -487,7 +537,7 @@ async function sincronizarConAPI() {
         Dirección: String(direccion).trim(),
         coordenadas: String(coords).trim(),
         fecha_cred: fechaCredNorm,
-        fecha_capacitacion: fechaCapNorm,
+        fecha_capacitaciconst API_URL : fechaCapNorm,
         telefonos: String(telefonos).trim(),
         observacion: String(obs).trim(),
         obs_capacitacion: String(obs).trim(),
